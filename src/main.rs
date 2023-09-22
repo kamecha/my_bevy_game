@@ -324,16 +324,64 @@ fn start_menu(mut commands: Commands) {
 
 fn delete_start_menu(
     mut camera_query: Query<(Entity, &Transform), With<Camera>>,
+    mut menu_query: Query<(Entity, &Transform), With<Node>>,
     mut commands: Commands,
 ) {
     for (camera_entity, camera_transform) in camera_query.iter_mut() {
         commands.entity(camera_entity).despawn();
+    }
+    for (menu_entity, menu_transform) in menu_query.iter_mut() {
+        commands.entity(menu_entity).despawn();
     }
 }
 
 fn start_game(keyboard_input: Res<Input<KeyCode>>, mut next_state: ResMut<NextState<GameState>>) {
     if keyboard_input.just_pressed(KeyCode::Space) {
         next_state.set(GameState::Playing);
+    }
+}
+
+fn result_menu(mut commands: Commands) {
+    // ui camera
+    // commands.spawn(Camera2dBundle::default());
+    commands
+        .spawn(NodeBundle {
+            style: Style { ..default() },
+            ..default()
+        })
+        .with_children(|parent| {
+            parent
+                .spawn(ButtonBundle {
+                    style: Style {
+                        width: Val::Px(200.0),
+                        height: Val::Px(100.0),
+                        ..default()
+                    },
+                    ..default()
+                })
+                .with_children(|parent| {
+                    parent.spawn(TextBundle::from_section(
+                        "Result",
+                        TextStyle {
+                            font_size: 50.0,
+                            color: Color::BLACK,
+                            ..default()
+                        },
+                    ));
+                });
+        });
+}
+
+fn delete_result_menu(
+    mut camera_query: Query<(Entity, &Transform), With<Camera>>,
+    mut menu_query: Query<(Entity, &Transform), With<Node>>,
+    mut commands: Commands,
+) {
+    for (camera_entity, camera_transform) in camera_query.iter_mut() {
+        commands.entity(camera_entity).despawn();
+    }
+    for (menu_entity, menu_transform) in menu_query.iter_mut() {
+        commands.entity(menu_entity).despawn();
     }
 }
 
@@ -359,11 +407,15 @@ fn main() {
             )
                 .run_if(in_state(GameState::Playing)),
         )
+        .add_systems(OnEnter(GameState::GameOver), result_menu)
         .add_systems(
             Update,
             (continue_from_game_over).run_if(in_state(GameState::GameOver)),
         )
-        .add_systems(OnExit(GameState::GameOver), delete_all)
+        .add_systems(
+            OnExit(GameState::GameOver),
+            (delete_all, delete_result_menu),
+        )
         // .add_systems(Update, show_score)
         .run();
 }
