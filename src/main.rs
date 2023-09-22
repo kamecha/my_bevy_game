@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy::sprite::collide_aabb::{collide, Collision};
+use bevy::sprite::collide_aabb::collide;
 use rand::Rng;
 
 #[derive(Component)]
@@ -187,19 +187,19 @@ fn delete_all(
     mut enemy_shot_query: Query<(Entity, &Transform), With<EnemyShot>>,
     mut commands: Commands,
 ) {
-    for (camera_entity, camera_transform) in camera_query.iter_mut() {
+    for (camera_entity, _camera_transform) in camera_query.iter_mut() {
         commands.entity(camera_entity).despawn();
     }
-    for (player_entity, player_transform) in player_query.iter_mut() {
+    for (player_entity, _player_transform) in player_query.iter_mut() {
         commands.entity(player_entity).despawn();
     }
-    for (enemy_entity, enemy_transform) in enemy_query.iter_mut() {
+    for (enemy_entity, _enemy_transform) in enemy_query.iter_mut() {
         commands.entity(enemy_entity).despawn();
     }
-    for (player_shot_entity, player_shot_transform) in player_shot_query.iter_mut() {
+    for (player_shot_entity, _player_shot_transform) in player_shot_query.iter_mut() {
         commands.entity(player_shot_entity).despawn();
     }
-    for (enemy_shot_entity, enemy_shot_transform) in enemy_shot_query.iter_mut() {
+    for (enemy_shot_entity, _enemy_shot_transform) in enemy_shot_query.iter_mut() {
         commands.entity(enemy_shot_entity).despawn();
     }
 }
@@ -218,7 +218,7 @@ fn check_for_collisions(
     mut commands: Commands,
 ) {
     // check for player shot collisions
-    for (player_shot_entity, player_shot_transform) in player_shot_query.iter_mut() {
+    for (_player_shot_entity, player_shot_transform) in player_shot_query.iter_mut() {
         for (enemy_entity, enemy_transform) in enemy_query.iter_mut() {
             let collision = collide(
                 player_shot_transform.translation,
@@ -236,8 +236,8 @@ fn check_for_collisions(
         }
     }
     // check for enemy shot collisions
-    for (enemy_shot_entity, enemy_shot_transform) in enemy_shot_query.iter_mut() {
-        for (player_entity, player_transform) in player_query.iter_mut() {
+    for (_enemy_shot_entity, enemy_shot_transform) in enemy_shot_query.iter_mut() {
+        for (_player_entity, player_transform) in player_query.iter_mut() {
             let collision = collide(
                 enemy_shot_transform.translation,
                 Vec2::new(10.0, 10.0),
@@ -250,8 +250,8 @@ fn check_for_collisions(
         }
     }
     // check for enemy collisions
-    for (enemy_entity, enemy_transform) in enemy_query.iter_mut() {
-        for (player_entity, player_transform) in player_query.iter_mut() {
+    for (_enemy_entity, enemy_transform) in enemy_query.iter_mut() {
+        for (_player_entity, player_transform) in player_query.iter_mut() {
             let collision = collide(
                 enemy_transform.translation,
                 Vec2::new(50.0, 50.0),
@@ -265,21 +265,6 @@ fn check_for_collisions(
             }
         }
     }
-}
-
-fn check_state(
-    mut state: ResMut<State<GameState>>,
-    keyboard_input: Res<Input<KeyCode>>,
-    mut query: Query<&mut Transform, With<Player>>,
-) {
-    println!("check_state");
-    println!("{:?}", state.get());
-}
-
-fn update_state(mut next_state: ResMut<NextState<GameState>>) {
-    println!("update_state");
-    println!("{:?}", next_state);
-    next_state.set(GameState::Playing)
 }
 
 fn continue_from_game_over(
@@ -327,10 +312,10 @@ fn delete_start_menu(
     mut menu_query: Query<(Entity, &Transform), With<Node>>,
     mut commands: Commands,
 ) {
-    for (camera_entity, camera_transform) in camera_query.iter_mut() {
+    for (camera_entity, _camera_transform) in camera_query.iter_mut() {
         commands.entity(camera_entity).despawn();
     }
-    for (menu_entity, menu_transform) in menu_query.iter_mut() {
+    for (menu_entity, _menu_transform) in menu_query.iter_mut() {
         commands.entity(menu_entity).despawn();
     }
 }
@@ -377,10 +362,10 @@ fn delete_result_menu(
     mut menu_query: Query<(Entity, &Transform), With<Node>>,
     mut commands: Commands,
 ) {
-    for (camera_entity, camera_transform) in camera_query.iter_mut() {
+    for (camera_entity, _camera_transform) in camera_query.iter_mut() {
         commands.entity(camera_entity).despawn();
     }
-    for (menu_entity, menu_transform) in menu_query.iter_mut() {
+    for (menu_entity, _menu_transform) in menu_query.iter_mut() {
         commands.entity(menu_entity).despawn();
     }
 }
@@ -392,7 +377,7 @@ fn main() {
         .add_systems(OnEnter(GameState::Start), start_menu)
         .add_systems(Update, start_game.run_if(in_state(GameState::Start)))
         .add_systems(OnExit(GameState::Start), delete_start_menu)
-        .add_systems(OnEnter(GameState::Playing), (setup))
+        .add_systems(OnEnter(GameState::Playing), setup)
         .add_systems(
             FixedUpdate,
             (
@@ -407,6 +392,7 @@ fn main() {
             )
                 .run_if(in_state(GameState::Playing)),
         )
+        .add_systems(Update, show_score.run_if(in_state(GameState::Playing)))
         .add_systems(OnEnter(GameState::GameOver), result_menu)
         .add_systems(
             Update,
