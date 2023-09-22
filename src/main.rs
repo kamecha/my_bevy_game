@@ -17,6 +17,9 @@ struct EnemyShot;
 #[derive(Component)]
 struct Collider;
 
+#[derive(Resource)]
+struct Score(usize);
+
 fn setup(mut commands: Commands) {
     // Camera
     commands.spawn(Camera2dBundle::default());
@@ -35,6 +38,8 @@ fn setup(mut commands: Commands) {
         Player,
         Collider,
     ));
+    // Score
+    commands.insert_resource(Score(0));
 }
 
 fn create_enemy(mut commands: Commands) {
@@ -166,7 +171,12 @@ fn move_enemy(mut query: Query<&mut Transform, With<Enemy>>, time_step: Res<Fixe
     }
 }
 
+fn show_score(score: Res<Score>) {
+    println!("Score: {}", score.0);
+}
+
 fn check_for_collisions(
+    mut score: ResMut<Score>,
     mut player_query: Query<(Entity, &Transform), With<Player>>,
     mut enemy_query: Query<(Entity, &Transform), With<Enemy>>,
     mut player_shot_query: Query<(Entity, &Transform), With<PlayerShot>>,
@@ -186,6 +196,8 @@ fn check_for_collisions(
                 println!("Collision detected: {:?}", collision);
                 // delete enemy
                 commands.entity(enemy_entity).despawn();
+                // update score
+                score.0 += 1;
             }
         }
     }
@@ -236,5 +248,6 @@ fn main() {
                 check_for_collisions,
             ),
         )
+        .add_systems(Update, show_score)
         .run();
 }
