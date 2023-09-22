@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::sprite::collide_aabb::{collide, Collision};
 use rand::Rng;
 
 #[derive(Component)]
@@ -12,6 +13,9 @@ struct PlayerShot;
 
 #[derive(Component)]
 struct EnemyShot;
+
+#[derive(Component)]
+struct Collider;
 
 fn setup(mut commands: Commands) {
     // Camera
@@ -29,6 +33,7 @@ fn setup(mut commands: Commands) {
             ..default()
         },
         Player,
+        Collider,
     ));
 }
 
@@ -52,6 +57,7 @@ fn create_enemy(mut commands: Commands) {
                 ..default()
             },
             Enemy,
+            Collider,
         ));
     }
 }
@@ -80,6 +86,7 @@ fn create_player_shot(
                 ..default()
             },
             PlayerShot,
+            Collider,
         ));
     }
 }
@@ -107,6 +114,7 @@ fn create_enemy_shot(mut query: Query<&mut Transform, With<Enemy>>, mut commands
                 ..default()
             },
             EnemyShot,
+            Collider,
         ));
     }
 }
@@ -158,6 +166,59 @@ fn move_enemy(mut query: Query<&mut Transform, With<Enemy>>, time_step: Res<Fixe
     }
 }
 
+fn check_for_collisions(
+    mut player_query: Query<(Entity, &Transform), With<Player>>,
+    mut enemy_query: Query<(Entity, &Transform), With<Enemy>>,
+    mut player_shot_query: Query<(Entity, &Transform), With<PlayerShot>>,
+    mut enemy_shot_query: Query<(Entity, &Transform), With<EnemyShot>>,
+    mut commands: Commands,
+) {
+    // check for player shot collisions
+    for (player_shot_entity, player_shot_transform) in player_shot_query.iter_mut() {
+        for (enemy_entity, enemy_transform) in enemy_query.iter_mut() {
+            let collision = collide(
+                player_shot_transform.translation,
+                Vec2::new(10.0, 10.0),
+                enemy_transform.translation,
+                Vec2::new(50.0, 50.0),
+            );
+            if let Some(collision) = collision {
+                println!("Collision detected: {:?}", collision);
+                // delete enemy
+                commands.entity(enemy_entity).despawn();
+            }
+        }
+    }
+    // check for enemy shot collisions
+    for (enemy_shot_entity, enemy_shot_transform) in enemy_shot_query.iter_mut() {
+        for (player_entity, player_transform) in player_query.iter_mut() {
+            let collision = collide(
+                enemy_shot_transform.translation,
+                Vec2::new(10.0, 10.0),
+                player_transform.translation,
+                Vec2::new(100.0, 100.0),
+            );
+            if let Some(collision) = collision {
+                println!("Collision detected: {:?}", collision);
+            }
+        }
+    }
+    // check for enemy collisions
+    for (enemy_entity, enemy_transform) in enemy_query.iter_mut() {
+        for (player_entity, player_transform) in player_query.iter_mut() {
+            let collision = collide(
+                enemy_transform.translation,
+                Vec2::new(50.0, 50.0),
+                player_transform.translation,
+                Vec2::new(100.0, 100.0),
+            );
+            if let Some(collision) = collision {
+                println!("Collision detected: {:?}", collision);
+            }
+        }
+    }
+}
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
@@ -171,7 +232,8 @@ fn main() {
                 create_enemy,
                 create_enemy_shot,
                 move_enemy,
-                move_enemy_shot
+                move_enemy_shot,
+                check_for_collisions,
             ),
         )
         .run();
