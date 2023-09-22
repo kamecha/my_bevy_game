@@ -189,6 +189,7 @@ fn check_for_collisions(
     mut enemy_query: Query<(Entity, &Transform), With<Enemy>>,
     mut player_shot_query: Query<(Entity, &Transform), With<PlayerShot>>,
     mut enemy_shot_query: Query<(Entity, &Transform), With<EnemyShot>>,
+    mut next_state: ResMut<NextState<GameState>>,
     mut commands: Commands,
 ) {
     // check for player shot collisions
@@ -234,6 +235,8 @@ fn check_for_collisions(
             );
             if let Some(collision) = collision {
                 println!("Collision detected: {:?}", collision);
+                // change state to game over
+                next_state.set(GameState::GameOver);
             }
         }
     }
@@ -254,14 +257,43 @@ fn update_state(mut next_state: ResMut<NextState<GameState>>) {
     next_state.set(GameState::Playing)
 }
 
+fn continue_from_game_over(
+    mut next_state: ResMut<NextState<GameState>>,
+    keyboard_input: Res<Input<KeyCode>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::Space) {
+        next_state.set(GameState::Start);
+    }
+}
+
+fn start_menu(
+    mut commands: Commands,
+) {
+    commands.spawn(Camera2dBundle::default());
+    commands.spawn(NodeBundle {
+        style: Style {
+            ..default()
+        },
+        ..default()
+    });
+}
+
+fn start_game(
+    keyboard_input: Res<Input<KeyCode>>,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::Space) {
+        next_state.set(GameState::Playing);
+    }
+}
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_state::<GameState>()
-        .add_systems(OnEnter(GameState::Start), (check_state, update_state))
-        .add_systems(OnEnter(GameState::Playing), check_state)
-        .add_systems(Startup, setup)
-        // GameState::Playingのみ実行
+        .add_systems(OnEnter(GameState::Start), start_menu)
+        .add_systems(Update, start_game.run_if(in_state(GameState::Start)))
+        .add_systems(OnEnter(GameState::Playing), setup)
         .add_systems(
             FixedUpdate,
             (
@@ -273,7 +305,12 @@ fn main() {
                 move_enemy,
                 move_enemy_shot,
                 check_for_collisions,
-            ).run_if(in_state(GameState::Playing)),
+            )
+                .run_if(in_state(GameState::Playing)),
+        )
+        .add_systems(
+            Update,
+            (continue_from_game_over).run_if(in_state(GameState::GameOver)),
         )
         // .add_systems(Update, show_score)
         .run();
