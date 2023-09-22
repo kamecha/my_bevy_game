@@ -20,6 +20,14 @@ struct Collider;
 #[derive(Resource)]
 struct Score(usize);
 
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+enum GameState {
+    #[default]
+    Start,
+    Playing,
+    GameOver,
+}
+
 fn setup(mut commands: Commands) {
     // Camera
     commands.spawn(Camera2dBundle::default());
@@ -231,10 +239,29 @@ fn check_for_collisions(
     }
 }
 
+fn check_state(
+    mut state: ResMut<State<GameState>>,
+    keyboard_input: Res<Input<KeyCode>>,
+    mut query: Query<&mut Transform, With<Player>>,
+) {
+    println!("check_state");
+    println!("{:?}", state.get());
+}
+
+fn update_state(mut next_state: ResMut<NextState<GameState>>) {
+    println!("update_state");
+    println!("{:?}", next_state);
+    next_state.set(GameState::Playing)
+}
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_state::<GameState>()
+        .add_systems(OnEnter(GameState::Start), (check_state, update_state))
+        .add_systems(OnEnter(GameState::Playing), check_state)
         .add_systems(Startup, setup)
+        // GameState::Playingのみ実行
         .add_systems(
             FixedUpdate,
             (
@@ -246,8 +273,8 @@ fn main() {
                 move_enemy,
                 move_enemy_shot,
                 check_for_collisions,
-            ),
+            ).run_if(in_state(GameState::Playing)),
         )
-        .add_systems(Update, show_score)
+        // .add_systems(Update, show_score)
         .run();
 }
