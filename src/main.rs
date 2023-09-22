@@ -179,6 +179,31 @@ fn move_enemy(mut query: Query<&mut Transform, With<Enemy>>, time_step: Res<Fixe
     }
 }
 
+fn delete_all(
+    mut camera_query: Query<(Entity, &Transform), With<Camera>>,
+    mut player_query: Query<(Entity, &Transform), With<Player>>,
+    mut enemy_query: Query<(Entity, &Transform), With<Enemy>>,
+    mut player_shot_query: Query<(Entity, &Transform), With<PlayerShot>>,
+    mut enemy_shot_query: Query<(Entity, &Transform), With<EnemyShot>>,
+    mut commands: Commands,
+) {
+    for (camera_entity, camera_transform) in camera_query.iter_mut() {
+        commands.entity(camera_entity).despawn();
+    }
+    for (player_entity, player_transform) in player_query.iter_mut() {
+        commands.entity(player_entity).despawn();
+    }
+    for (enemy_entity, enemy_transform) in enemy_query.iter_mut() {
+        commands.entity(enemy_entity).despawn();
+    }
+    for (player_shot_entity, player_shot_transform) in player_shot_query.iter_mut() {
+        commands.entity(player_shot_entity).despawn();
+    }
+    for (enemy_shot_entity, enemy_shot_transform) in enemy_shot_query.iter_mut() {
+        commands.entity(enemy_shot_entity).despawn();
+    }
+}
+
 fn show_score(score: Res<Score>) {
     println!("Score: {}", score.0);
 }
@@ -262,26 +287,18 @@ fn continue_from_game_over(
     keyboard_input: Res<Input<KeyCode>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Space) {
-        next_state.set(GameState::Start);
+        next_state.set(GameState::Playing);
     }
 }
 
-fn start_menu(
-    mut commands: Commands,
-) {
-    commands.spawn(Camera2dBundle::default());
+fn start_menu(mut commands: Commands) {
     commands.spawn(NodeBundle {
-        style: Style {
-            ..default()
-        },
+        style: Style { ..default() },
         ..default()
     });
 }
 
-fn start_game(
-    keyboard_input: Res<Input<KeyCode>>,
-    mut next_state: ResMut<NextState<GameState>>,
-) {
+fn start_game(keyboard_input: Res<Input<KeyCode>>, mut next_state: ResMut<NextState<GameState>>) {
     if keyboard_input.just_pressed(KeyCode::Space) {
         next_state.set(GameState::Playing);
     }
@@ -293,7 +310,7 @@ fn main() {
         .add_state::<GameState>()
         .add_systems(OnEnter(GameState::Start), start_menu)
         .add_systems(Update, start_game.run_if(in_state(GameState::Start)))
-        .add_systems(OnEnter(GameState::Playing), setup)
+        .add_systems(OnEnter(GameState::Playing), (setup))
         .add_systems(
             FixedUpdate,
             (
@@ -312,6 +329,7 @@ fn main() {
             Update,
             (continue_from_game_over).run_if(in_state(GameState::GameOver)),
         )
+        .add_systems(OnExit(GameState::GameOver), delete_all)
         // .add_systems(Update, show_score)
         .run();
 }
