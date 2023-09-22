@@ -1,4 +1,4 @@
-use bevy::log::{LogPlugin, Level};
+use bevy::log::{Level, LogPlugin};
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::collide;
 use rand::Rng;
@@ -373,10 +373,20 @@ fn delete_result_menu(
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins.set(LogPlugin {
-            level: Level::DEBUG,
-            ..default()
-        }))
+        .add_plugins(
+            DefaultPlugins
+                .set(LogPlugin {
+                    level: Level::DEBUG,
+                    ..default()
+                })
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "test用STGだよ~".to_string(),
+                        ..default()
+                    }),
+                    ..default()
+                }),
+        )
         .add_state::<GameState>()
         .add_systems(OnEnter(GameState::Start), start_menu)
         .add_systems(Update, start_game.run_if(in_state(GameState::Start)))
