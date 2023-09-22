@@ -292,10 +292,43 @@ fn continue_from_game_over(
 }
 
 fn start_menu(mut commands: Commands) {
-    commands.spawn(NodeBundle {
-        style: Style { ..default() },
-        ..default()
-    });
+    // ui camera
+    commands.spawn(Camera2dBundle::default());
+    commands
+        .spawn(NodeBundle {
+            style: Style { ..default() },
+            ..default()
+        })
+        .with_children(|parent| {
+            parent
+                .spawn(ButtonBundle {
+                    style: Style {
+                        width: Val::Px(200.0),
+                        height: Val::Px(100.0),
+                        ..default()
+                    },
+                    ..default()
+                })
+                .with_children(|parent| {
+                    parent.spawn(TextBundle::from_section(
+                        "Start",
+                        TextStyle {
+                            font_size: 50.0,
+                            color: Color::BLACK,
+                            ..default()
+                        },
+                    ));
+                });
+        });
+}
+
+fn delete_start_menu(
+    mut camera_query: Query<(Entity, &Transform), With<Camera>>,
+    mut commands: Commands,
+) {
+    for (camera_entity, camera_transform) in camera_query.iter_mut() {
+        commands.entity(camera_entity).despawn();
+    }
 }
 
 fn start_game(keyboard_input: Res<Input<KeyCode>>, mut next_state: ResMut<NextState<GameState>>) {
@@ -310,6 +343,7 @@ fn main() {
         .add_state::<GameState>()
         .add_systems(OnEnter(GameState::Start), start_menu)
         .add_systems(Update, start_game.run_if(in_state(GameState::Start)))
+        .add_systems(OnExit(GameState::Start), delete_start_menu)
         .add_systems(OnEnter(GameState::Playing), (setup))
         .add_systems(
             FixedUpdate,
