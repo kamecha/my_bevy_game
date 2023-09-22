@@ -1,3 +1,4 @@
+use bevy::log::{LogPlugin, Level};
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::collide;
 use rand::Rng;
@@ -205,7 +206,7 @@ fn delete_all(
 }
 
 fn show_score(score: Res<Score>) {
-    println!("Score: {}", score.0);
+    debug!("Score: {}", score.0);
 }
 
 fn check_for_collisions(
@@ -227,7 +228,7 @@ fn check_for_collisions(
                 Vec2::new(50.0, 50.0),
             );
             if let Some(collision) = collision {
-                println!("Collision detected: {:?}", collision);
+                debug!("Collision detected: {:?}", collision);
                 // delete enemy
                 commands.entity(enemy_entity).despawn();
                 // update score
@@ -245,7 +246,7 @@ fn check_for_collisions(
                 Vec2::new(100.0, 100.0),
             );
             if let Some(collision) = collision {
-                println!("Collision detected: {:?}", collision);
+                debug!("Collision detected: {:?}", collision);
             }
         }
     }
@@ -259,7 +260,7 @@ fn check_for_collisions(
                 Vec2::new(100.0, 100.0),
             );
             if let Some(collision) = collision {
-                println!("Collision detected: {:?}", collision);
+                debug!("Collision detected: {:?}", collision);
                 // change state to game over
                 next_state.set(GameState::GameOver);
             }
@@ -372,7 +373,10 @@ fn delete_result_menu(
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(LogPlugin {
+            level: Level::DEBUG,
+            ..default()
+        }))
         .add_state::<GameState>()
         .add_systems(OnEnter(GameState::Start), start_menu)
         .add_systems(Update, start_game.run_if(in_state(GameState::Start)))
