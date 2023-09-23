@@ -35,6 +35,12 @@ enum StartMenu {
     Exit,
 }
 
+#[derive(Component, Debug)]
+enum ResultMenu {
+    Restart,
+    BackToTitle,
+}
+
 fn setup(mut commands: Commands) {
     // Camera
     commands.spawn(Camera2dBundle::default());
@@ -427,9 +433,10 @@ fn delete_start_menu(
     }
 }
 
-fn result_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn result_menu(mut commands: Commands) {
     // ui camera
     // commands.spawn(Camera2dBundle::default());
+    commands.spawn(ResultMenu::Restart);
     commands
         .spawn(NodeBundle {
             style: Style {
@@ -521,6 +528,72 @@ fn result_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
         });
 }
 
+fn update_result_menu(
+    mut menu_button_query: Query<(&mut BorderColor, &Children), With<Button>>,
+    text_query: Query<&Text>,
+    result_menu_query: Query<&ResultMenu>,
+) {
+    let result_menu = result_menu_query.get_single();
+    if result_menu.is_err() {
+        return;
+    }
+    match result_menu.unwrap() {
+        ResultMenu::Restart => {
+            for (mut border_color, children) in menu_button_query.iter_mut() {
+                for child in children.iter() {
+                    let text = text_query.get(*child).unwrap();
+                    if text.sections.get(0).unwrap().value.as_str() == "Restart" {
+                        border_color.0 = Color::RED;
+                    } else {
+                        border_color.0 = Color::BLACK;
+                    }
+                }
+            }
+        }
+        ResultMenu::BackToTitle => {
+            for (mut border_color, children) in menu_button_query.iter_mut() {
+                for child in children.iter() {
+                    let text = text_query.get(*child).unwrap();
+                    if text.sections.get(0).unwrap().value.as_str() == "Back to Title" {
+                        border_color.0 = Color::RED;
+                    } else {
+                        border_color.0 = Color::BLACK;
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn input_result_menu(
+    keyboard_input: ResMut<Input<KeyCode>>,
+    mut result_menu_query: Query<&mut ResultMenu>,
+    mut next_state: ResMut<NextState<GameState>>,
+    ) {
+    if keyboard_input.just_pressed(KeyCode::Left) {
+        for mut result_menu in result_menu_query.iter_mut() {
+            *result_menu = ResultMenu::Restart;
+        }
+    }
+    if keyboard_input.just_pressed(KeyCode::Right) {
+        for mut result_menu in result_menu_query.iter_mut() {
+            *result_menu = ResultMenu::BackToTitle;
+        }
+    }
+    if keyboard_input.just_pressed(KeyCode::Return) {
+        for result_menu in result_menu_query.iter_mut() {
+            match *result_menu {
+                ResultMenu::Restart => {
+                    next_state.set(GameState::Playing);
+                }
+                ResultMenu::BackToTitle => {
+                    next_state.set(GameState::Start);
+                }
+            }
+        }
+    }
+}
+
 fn delete_result_menu(
     mut camera_query: Query<(Entity, &Transform), With<Camera>>,
     mut menu_query: Query<(Entity, &Transform), With<Node>>,
@@ -583,7 +656,7 @@ fn main() {
         .add_systems(OnEnter(GameState::GameOver), result_menu)
         .add_systems(
             Update,
-            (continue_from_game_over).run_if(in_state(GameState::GameOver)),
+            (continue_from_game_over, update_result_menu, input_result_menu).run_if(in_state(GameState::GameOver)),
         )
         .add_systems(
             OnExit(GameState::GameOver),
