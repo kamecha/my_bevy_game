@@ -26,7 +26,7 @@ enum GameState {
     #[default]
     Start,
     Playing,
-    GameOver,
+    Result,
 }
 
 #[derive(Component, Debug)]
@@ -273,14 +273,13 @@ fn check_for_collisions(
             );
             if let Some(collision) = collision {
                 debug!("Collision detected: {:?}", collision);
-                // change state to game over
-                next_state.set(GameState::GameOver);
+                next_state.set(GameState::Result);
             }
         }
     }
 }
 
-fn continue_from_game_over(
+fn continue_from_result(
     mut next_state: ResMut<NextState<GameState>>,
     keyboard_input: Res<Input<KeyCode>>,
 ) {
@@ -461,7 +460,7 @@ fn result_menu(mut commands: Commands) {
                 })
                 .with_children(|parent| {
                     parent.spawn(TextBundle::from_section(
-                        "Game Over",
+                        "Result",
                         TextStyle {
                             font_size: 50.0,
                             color: Color::BLACK,
@@ -653,13 +652,13 @@ fn main() {
                 .run_if(in_state(GameState::Playing)),
         )
         .add_systems(Update, show_score.run_if(in_state(GameState::Playing)))
-        .add_systems(OnEnter(GameState::GameOver), result_menu)
+        .add_systems(OnEnter(GameState::Result), result_menu)
         .add_systems(
             Update,
-            (continue_from_game_over, update_result_menu, input_result_menu).run_if(in_state(GameState::GameOver)),
+            (continue_from_result, update_result_menu, input_result_menu).run_if(in_state(GameState::Result)),
         )
         .add_systems(
-            OnExit(GameState::GameOver),
+            OnExit(GameState::Result),
             (delete_all, delete_result_menu),
         )
         // .add_systems(Update, show_score)
