@@ -282,7 +282,12 @@ fn start_menu(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
     commands
         .spawn(NodeBundle {
-            style: Style { ..default() },
+            style: Style {
+                width: Val::Percent(100.0),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                ..default()
+            },
             ..default()
         })
         .with_children(|parent| {
@@ -291,6 +296,8 @@ fn start_menu(mut commands: Commands) {
                     style: Style {
                         width: Val::Px(200.0),
                         height: Val::Px(100.0),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
                         ..default()
                     },
                     ..default()
