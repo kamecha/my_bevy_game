@@ -427,33 +427,96 @@ fn delete_start_menu(
     }
 }
 
-fn result_menu(mut commands: Commands) {
+fn result_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
     // ui camera
     // commands.spawn(Camera2dBundle::default());
     commands
         .spawn(NodeBundle {
-            style: Style { ..default() },
+            style: Style {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
             ..default()
         })
         .with_children(|parent| {
             parent
-                .spawn(ButtonBundle {
+                .spawn(NodeBundle {
                     style: Style {
-                        width: Val::Px(200.0),
-                        height: Val::Px(100.0),
+                        flex_direction: FlexDirection::Column,
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
                         ..default()
                     },
                     ..default()
                 })
                 .with_children(|parent| {
                     parent.spawn(TextBundle::from_section(
-                        "Result",
+                        "Game Over",
                         TextStyle {
                             font_size: 50.0,
                             color: Color::BLACK,
                             ..default()
                         },
                     ));
+                    parent
+                        .spawn(NodeBundle {
+                            style: Style {
+                                flex_direction: FlexDirection::Row,
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
+                                ..default()
+                            },
+                            ..default()
+                        })
+                        .with_children(|parent| {
+                            parent
+                                .spawn(ButtonBundle {
+                                    style: Style {
+                                        width: Val::Px(200.0),
+                                        height: Val::Px(100.0),
+                                        border: UiRect::all(Val::Px(2.0)),
+                                        justify_content: JustifyContent::Center,
+                                        align_items: AlignItems::Center,
+                                        ..default()
+                                    },
+                                    ..default()
+                                })
+                                .with_children(|parent| {
+                                    parent.spawn(TextBundle::from_section(
+                                        "Restart",
+                                        TextStyle {
+                                            font_size: 50.0,
+                                            color: Color::BLACK,
+                                            ..default()
+                                        },
+                                    ));
+                                });
+                            parent
+                                .spawn(ButtonBundle {
+                                    style: Style {
+                                        width: Val::Px(200.0),
+                                        height: Val::Px(100.0),
+                                        border: UiRect::all(Val::Px(2.0)),
+                                        justify_content: JustifyContent::Center,
+                                        align_items: AlignItems::Center,
+                                        ..default()
+                                    },
+                                    ..default()
+                                })
+                                .with_children(|parent| {
+                                    parent.spawn(TextBundle::from_section(
+                                        "Back to Title",
+                                        TextStyle {
+                                            font_size: 50.0,
+                                            color: Color::BLACK,
+                                            ..default()
+                                        },
+                                    ));
+                                });
+                        });
                 });
         });
 }
