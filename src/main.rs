@@ -564,6 +564,20 @@ fn update_result_menu(
     }
 }
 
+fn delete_result_menu(
+    mut result_menu_query: Query<Entity, With<ResultMenu>>,
+    mut menu_query: Query<Entity, With<Node>>,
+    mut commands: Commands,
+) {
+    // delete result menu
+    for result_menu in result_menu_query.iter_mut() {
+        commands.entity(result_menu).despawn();
+    }
+    for menu in menu_query.iter_mut() {
+        commands.entity(menu).despawn();
+    }
+}
+
 fn input_result_menu(
     keyboard_input: ResMut<Input<KeyCode>>,
     mut result_menu_query: Query<&mut ResultMenu>,
@@ -590,19 +604,6 @@ fn input_result_menu(
                 }
             }
         }
-    }
-}
-
-fn delete_result_menu(
-    mut camera_query: Query<(Entity, &Transform), With<Camera>>,
-    mut menu_query: Query<(Entity, &Transform), With<Node>>,
-    mut commands: Commands,
-) {
-    for (camera_entity, _camera_transform) in camera_query.iter_mut() {
-        commands.entity(camera_entity).despawn();
-    }
-    for (menu_entity, _menu_transform) in menu_query.iter_mut() {
-        commands.entity(menu_entity).despawn();
     }
 }
 
@@ -661,6 +662,7 @@ fn main() {
             OnExit(GameState::Result),
             (delete_all, delete_result_menu),
         )
+        .add_systems(OnExit(GameState::Result), (delete_all, delete_result_menu))
         // .add_systems(Update, show_score)
         .run();
 }
