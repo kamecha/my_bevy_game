@@ -421,11 +421,15 @@ fn update_start_menu(
 
 fn delete_start_menu(
     mut camera_query: Query<(Entity, &Transform), With<Camera>>,
+    mut start_menu_query: Query<Entity, With<StartMenu>>,
     mut menu_query: Query<(Entity, &Transform), With<Node>>,
     mut commands: Commands,
 ) {
     for (camera_entity, _camera_transform) in camera_query.iter_mut() {
         commands.entity(camera_entity).despawn();
+    }
+    for start_menu_entity in start_menu_query.iter_mut() {
+        commands.entity(start_menu_entity).despawn();
     }
     for (menu_entity, _menu_transform) in menu_query.iter_mut() {
         commands.entity(menu_entity).despawn();
