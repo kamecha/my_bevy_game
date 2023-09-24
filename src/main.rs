@@ -582,7 +582,7 @@ fn input_result_menu(
     keyboard_input: ResMut<Input<KeyCode>>,
     mut result_menu_query: Query<&mut ResultMenu>,
     mut next_state: ResMut<NextState<GameState>>,
-    ) {
+) {
     if keyboard_input.just_pressed(KeyCode::Left) {
         for mut result_menu in result_menu_query.iter_mut() {
             *result_menu = ResultMenu::Restart;
@@ -656,11 +656,8 @@ fn main() {
         .add_systems(OnEnter(GameState::Result), result_menu)
         .add_systems(
             Update,
-            (continue_from_result, update_result_menu, input_result_menu).run_if(in_state(GameState::Result)),
-        )
-        .add_systems(
-            OnExit(GameState::Result),
-            (delete_all, delete_result_menu),
+            (continue_from_result, update_result_menu, input_result_menu)
+                .run_if(in_state(GameState::Result)),
         )
         .add_systems(OnExit(GameState::Result), (delete_all, delete_result_menu))
         // .add_systems(Update, show_score)
