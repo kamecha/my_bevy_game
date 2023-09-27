@@ -701,6 +701,7 @@ fn main() {
                     ..default()
                 }),
         )
+        .add_systems(Update, bevy::window::close_on_esc)
         .add_state::<GameState>()
         .add_systems(OnEnter(GameState::Start), start_menu)
         .add_systems(
