@@ -21,6 +21,9 @@ struct Collider;
 #[derive(Resource)]
 struct Score(usize);
 
+#[derive(Component, Debug)]
+struct ScoreUI;
+
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 enum GameState {
     #[default]
@@ -61,6 +64,41 @@ fn setup(mut commands: Commands) {
     ));
     // Score
     commands.insert_resource(Score(0));
+    // Score UI
+    commands
+        .spawn((
+            NodeBundle {
+                style: Style { ..default() },
+                ..default()
+            },
+            ScoreUI,
+        ))
+        .with_children(|parent| {
+            parent.spawn(TextBundle {
+                text: Text {
+                    sections: vec![
+                        TextSection {
+                            value: "Score: ".to_string(),
+                            style: TextStyle {
+                                font_size: 50.0,
+                                color: Color::BLACK,
+                                ..default()
+                            },
+                        },
+                        TextSection {
+                            value: "0".to_string(),
+                            style: TextStyle {
+                                font_size: 50.0,
+                                color: Color::BLACK,
+                                ..default()
+                            },
+                        },
+                    ],
+                    ..default()
+                },
+                ..default()
+            });
+        });
 }
 
 fn create_enemy(mut commands: Commands) {
@@ -217,8 +255,37 @@ fn delete_all(
     }
 }
 
-fn show_score(score: Res<Score>) {
-    debug!("Score: {}", score.0);
+fn show_score(
+    score: Res<Score>,
+    mut score_ui_query: Query<&mut Children, With<ScoreUI>>,
+    mut commands: Commands,
+) {
+    // update score ui
+    let score_text: String = score.0.to_string();
+    for children in score_ui_query.iter_mut() {
+        for child in children.iter() {
+            let mut text = Text::default();
+            text.sections = vec![
+                TextSection {
+                    value: "Score: ".to_string(),
+                    style: TextStyle {
+                        font_size: 50.0,
+                        color: Color::BLACK,
+                        ..default()
+                    },
+                },
+                TextSection {
+                    value: score_text.clone(),
+                    style: TextStyle {
+                        font_size: 50.0,
+                        color: Color::BLACK,
+                        ..default()
+                    },
+                },
+            ];
+            commands.entity(*child).insert(text);
+        }
+    }
 }
 
 fn check_for_collisions(
