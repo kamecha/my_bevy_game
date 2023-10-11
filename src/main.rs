@@ -2,6 +2,9 @@ use bevy::log::{Level, LogPlugin};
 use bevy::prelude::*;
 
 mod game;
+mod game_start;
+mod game_playing;
+mod game_result;
 
 fn main() {
     App::new()
