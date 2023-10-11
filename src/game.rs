@@ -681,14 +681,32 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_state::<GameState>()
-            .add_systems(OnEnter(GameState::Start), start_menu)
+        app.add_state::<GameState>().add_plugins((
+            GameStartPlugin,
+            GamePlayingPlugin,
+            GameResultPlugin,
+        ));
+    }
+}
+
+pub struct GameStartPlugin;
+
+impl Plugin for GameStartPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(OnEnter(GameState::Start), start_menu)
             .add_systems(
                 Update,
                 (update_start_menu, input_start_menu).run_if(in_state(GameState::Start)),
             )
-            .add_systems(OnExit(GameState::Start), delete_start_menu)
-            .add_systems(OnEnter(GameState::Playing), setup)
+            .add_systems(OnExit(GameState::Start), delete_start_menu);
+    }
+}
+
+pub struct GamePlayingPlugin;
+
+impl Plugin for GamePlayingPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(OnEnter(GameState::Playing), setup)
             .add_systems(
                 FixedUpdate,
                 (
@@ -703,8 +721,15 @@ impl Plugin for GamePlugin {
                 )
                     .run_if(in_state(GameState::Playing)),
             )
-            .add_systems(Update, show_score.run_if(in_state(GameState::Playing)))
-            .add_systems(OnEnter(GameState::Result), result_menu)
+            .add_systems(Update, show_score.run_if(in_state(GameState::Playing)));
+    }
+}
+
+pub struct GameResultPlugin;
+
+impl Plugin for GameResultPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(OnEnter(GameState::Result), result_menu)
             .add_systems(
                 Update,
                 (continue_from_result, update_result_menu, input_result_menu)
